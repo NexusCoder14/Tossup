@@ -219,7 +219,25 @@ export function attachSearchFieldEvents({ onSubmit, restoreQuery = '' } = {}) {
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   const clearBtn = document.getElementById('search-clear');
+  const hero = document.querySelector('.hero');
+  const searchWrapper = input?.closest('.search-wrapper');
   if (!input || !results) return;
+  let resultsOpen = results.classList.contains('open');
+  const resultsObserver = new MutationObserver(() => {
+    const isOpen = results.classList.contains('open');
+    hero?.classList.toggle('is-searching', isOpen);
+    if (!resultsOpen && isOpen && window.matchMedia('(max-width: 699px)').matches) {
+      window.setTimeout(() => {
+        if (!results.classList.contains('open') || !searchWrapper) return;
+        if (searchWrapper.getBoundingClientRect().top <= 140) return;
+        const reduceMotion = document.documentElement.hasAttribute('data-reduce-motion')
+          || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        searchWrapper.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+      }, 400);
+    }
+    resultsOpen = isOpen;
+  });
+  resultsObserver.observe(results, { attributes: true, attributeFilter: ['class'] });
   if (restoreQuery) {
     input.value = restoreQuery;
     clearBtn.classList.add('visible');
